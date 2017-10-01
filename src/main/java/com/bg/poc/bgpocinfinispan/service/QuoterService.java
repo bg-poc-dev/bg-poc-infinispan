@@ -26,7 +26,7 @@ public class QuoterService {
                 .onStatus(HttpStatus::is4xxClientError, resp -> Mono.just(new RuntimeException(resp.statusCode().value() + " : " + resp.statusCode().getReasonPhrase())))
                 .bodyToFlux(Quoter.class).filter(q -> dataCache.quoter(q.getValue().getId()) == null)
                 .concatWith(newQuoter())
-                .doOnNext(q -> dataCache.quoterPut(q.getValue().getId(), q));
+                .doOnNext(q -> dataCache.quoterPut(q.getValue().getId(), q)).log();
     }
 
     private Flux<Quoter> newQuoter() {

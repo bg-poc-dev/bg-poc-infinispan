@@ -20,8 +20,9 @@ public class QuotEndpoint {
 
     @PostMapping(path = "/quot")
     public Mono<ResponseEntity<Void>> quot(@RequestBody Quot quot) {
-        log.info(String.format("POST quot: %s with id [%s]", quot.getQuote(), quot.getId()));
-        return Mono.delay(Duration.ofSeconds(random.nextInt(5 - 2) + 2))
+//        log.info(String.format("POST quot: %s with id [%s]", quot.getQuote(), quot.getId()));
+        return Mono.delay(Duration.ofSeconds(random.nextInt(5 - 2) + 2)).log()
+//                .log(String.format("POST quot: %s with id [%s]", quot.getQuote(), quot.getId()))
                 .map(q -> ResponseEntity.created(quotUrl(quot.getId())).build());
     }
 
