@@ -18,10 +18,14 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.web.reactive.config.EnableWebFlux;
 
-
+/**
+ * curl -I -X POST localhost:8081/quotimport
+ */
 @SpringBootApplication
 @EnableCaching
+@EnableWebFlux
 @Log
 public class BgPocInfinispanApplication {
 
@@ -38,7 +42,6 @@ public class BgPocInfinispanApplication {
 
     @Bean
     public InfinispanGlobalConfigurer globalConfiguration() {
-        log.info("Defining Global Configuration");
         return () -> GlobalConfigurationBuilder
                 .defaultClusteredBuilder()
                 .transport().clusterName(clusterName)
@@ -48,7 +51,6 @@ public class BgPocInfinispanApplication {
 
     @Bean
     public InfinispanCacheConfigurer cacheConfigurer() {
-        log.info(String.format("Defining %s configuration", CACHE_NAME));
         return manager -> {
             Configuration ispnConfig = new ConfigurationBuilder()
                     .persistence()
