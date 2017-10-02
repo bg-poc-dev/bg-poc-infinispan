@@ -1,9 +1,11 @@
 package com.bg.poc.bgpocinfinispan.endpoint;
 
 import com.bg.poc.bgpocinfinispan.domain.Quot;
-import com.bg.poc.bgpocinfinispan.domain.Quoter;
+import com.bg.poc.bgpocinfinispan.service.QuoterService;
 import lombok.extern.java.Log;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,27 +20,26 @@ import java.net.URI;
 @Log
 public class QuotImportEndpoint {
 
-    private WebClient quotwebClient = WebClient.create();
     private WebClient quoterwebClient = WebClient.create();
 
     @Value("${server.port}")
     private String serverPort;
 
-    @PostMapping(path = "/quotimport")
-    public Mono<ResponseEntity<Void>> importQuot() {
-        return quotwebClient.get().uri(quotersURI()).retrieve().bodyToFlux(Quoter.class)
-                .flatMap(q -> {
-//                            log.info(String.format("Import quot %s", q.getValue()));
-                            return quoterwebClient.post().uri(quotURI())
-                                    .body(BodyInserters.fromObject(new Quot(q.getValue().getId(), q.getValue().getQuote())))
-                                    .exchange().map(this::quotUri).log();
-                        }
-                )
-                .next();
-    }
+    @Autowired
+    private QuoterService quoterService;
 
-    private URI quotersURI() {
-        return URI.create("http://localhost:" + serverPort + "/quoters");
+    @PostMapping(path = "/quotimport")
+    public Mono<ResponseEntity<String>> importQuot() {
+        return
+                quoterService.fetchQuoters()
+                        .flatMap(q -> quoterwebClient.post().uri(quotURI())
+                                .contentType(MediaType.APPLICATION_STREAM_JSON)
+                                .body(BodyInserters.fromObject(new Quot(q.getValue().getId(), q.getValue().getQuote())))
+                                .exchange()
+                                .map(this::quotUri)
+                        )
+                        .count()
+                        .map(v -> ResponseEntity.ok(String.format("%d quotes were imported", v)));
     }
 
     private URI quotURI() {
